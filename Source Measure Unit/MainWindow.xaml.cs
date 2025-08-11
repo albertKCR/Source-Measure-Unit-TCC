@@ -18,6 +18,8 @@ using OxyPlot.Axes;
 using MahApps.Metro.Controls;
 using OxyPlot.Series;
 using System.IO.Ports;
+using System.IO;
+using Microsoft.Win32;
 
 namespace Source_Measure_Unit
 {
@@ -192,7 +194,7 @@ namespace Source_Measure_Unit
         {
             InitializeComponent();
             ApplyTheme(); // Apply default theme (light)
-
+            LoadMeasurementConfigs();
             // Create the start tab
             HomeTabControl = new TabControl
             {
@@ -226,18 +228,6 @@ namespace Source_Measure_Unit
         {
             _isDarkMode = false;
             ApplyTheme();
-        }
-
-        private void LoadMeasurement_Click(object sender, RoutedEventArgs e)
-        {
-            // Logic to load a selected measurement
-            MessageBox.Show("Load Measurement Clicked");
-        }
-
-        private void DeleteMeasurement_Click(object sender, RoutedEventArgs e)
-        {
-            // Logic to delete a selected measurement
-            MessageBox.Show("Delete Measurement Clicked");
         }
 
         private void ConfigureTechnique_Click(object sender, RoutedEventArgs e)
@@ -652,7 +642,7 @@ namespace Source_Measure_Unit
                         }
                         else
                         {
-                            parametersString += "LSV" + ";" + LSVstartVBox2.Text + ";" + LSVfinalVBox2.Text + ";" + LSVstepVBox2.Text + ";" + LSVtimeStepBox2.Text;
+                            parametersString += "2" + "LSV" + ";" + LSVstartVBox2.Text + ";" + LSVfinalVBox2.Text + ";" + LSVstepVBox2.Text + ";" + LSVtimeStepBox2.Text;
                             Console.WriteLine("LSV Channel 2 Parameters Sent");
                         }
                         break;
@@ -670,7 +660,7 @@ namespace Source_Measure_Unit
                             break;
                         }
                         else { 
-                        parametersString += "CV" + ";" + CVstartVBox2.Text + ";" + CVpeakV1Box2.Text + ";" + CVpeakV2Box2.Text + ";" + CVfinalVBox2.Text + ";" + CVstepVBox2.Text + ";" + CVtimeStepBox2.Text + ";" + CVcycleBox2.Text;
+                        parametersString += "2" + "CV" + ";" + CVstartVBox2.Text + ";" + CVpeakV1Box2.Text + ";" + CVpeakV2Box2.Text + ";" + CVfinalVBox2.Text + ";" + CVstepVBox2.Text + ";" + CVtimeStepBox2.Text + ";" + CVcycleBox2.Text;
                         Console.WriteLine("CV Channel 2 Parameters Sent");
                         }
                         break;
@@ -688,7 +678,7 @@ namespace Source_Measure_Unit
                         }
                         else
                         {
-                            parametersString += "DPV" + ";" + DPVstartVBox2.Text + ";" + DPVfinalVBox2.Text + ";" + DPVstepVBox2.Text + ";" + DPVpulseBox2.Text + ";" + DPVpulseTimeBox2.Text + ";" + DPVbaseTimeBox2.Text;
+                            parametersString += "2" + "DPV" + ";" + DPVstartVBox2.Text + ";" + DPVfinalVBox2.Text + ";" + DPVstepVBox2.Text + ";" + DPVpulseBox2.Text + ";" + DPVpulseTimeBox2.Text + ";" + DPVbaseTimeBox2.Text;
                             Console.WriteLine("DPV Channel 2 Parameters Sent");
                         }
                         
@@ -706,7 +696,7 @@ namespace Source_Measure_Unit
                         }
                         else 
                         {
-                            parametersString += "SWV" + ";" + SWVstartVBox2.Text + ";" + SWVfinalVBox2.Text + ";" + SWVstepVBox2.Text + ";" + SWVAmpBox2.Text + ";" + SWVtimeStepBox2.Text;
+                            parametersString += "2" + "SWV" + ";" + SWVstartVBox2.Text + ";" + SWVfinalVBox2.Text + ";" + SWVstepVBox2.Text + ";" + SWVAmpBox2.Text + ";" + SWVtimeStepBox2.Text;
                             Console.WriteLine("SWV Channel 2 Parameters Sent");
                         }
                         
@@ -722,7 +712,7 @@ namespace Source_Measure_Unit
                         }
                         else 
                         {
-                            parametersString += "CP" + ";" + CPcurrentBox2.Text + ";" + CPsampleTBox2.Text + ";" + CPsamplePBox2.Text;
+                            parametersString += "2" + "CP" + ";" + CPcurrentBox2.Text + ";" + CPsampleTBox2.Text + ";" + CPsamplePBox2.Text;
                             Console.WriteLine("CP Channel 2 Parameters Sent");
                         }
                         
@@ -739,7 +729,7 @@ namespace Source_Measure_Unit
                         }
                         else 
                         {
-                            parametersString += "LSP" + ";" + LSPstartIBox2.Text + ";" + LSPfinalIBox2.Text + ";" + LSPstepIBox2.Text + ";" + LSPtimeStepBox2.Text;
+                            parametersString += "2" + "LSP" + ";" + LSPstartIBox2.Text + ";" + LSPfinalIBox2.Text + ";" + LSPstepIBox2.Text + ";" + LSPtimeStepBox2.Text;
                             Console.WriteLine("LSP Channel 2 Parameters Sent");
                         }
                         
@@ -759,7 +749,7 @@ namespace Source_Measure_Unit
                         }
                         else
                         {
-                            parametersString += "CyP" + ";" + CyPstartIBox2.Text + ";" + CyPpeakI1Box2.Text + ";" + CyPpeakI2Box2.Text + ";" + CyPfinalIBox2.Text + ";" + CyPstepIBox2.Text + ";" + CyPtimeStepBox2.Text + ";" + CyPcycleBox2.Text;
+                            parametersString += "2" + "CyP" + ";" + CyPstartIBox2.Text + ";" + CyPpeakI1Box2.Text + ";" + CyPpeakI2Box2.Text + ";" + CyPfinalIBox2.Text + ";" + CyPstepIBox2.Text + ";" + CyPtimeStepBox2.Text + ";" + CyPcycleBox2.Text;
                             Console.WriteLine("CyP Channel 2 Parameters Sent");
                         }
                         
@@ -1040,7 +1030,110 @@ namespace Source_Measure_Unit
 
         private void SaveMeasurement_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Save Measurement Clicked");
+            if (!String.IsNullOrEmpty(parametersString))
+            {
+                try
+                {
+                    string filePath;
+                    string defaultName = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".txt";
+
+                    var saveFileDialog = new SaveFileDialog
+                    {
+                        Title = "Save measure configuration",
+                        Filter = "TXT File (*.txt)|*.txt",
+                        DefaultExt = "txt",
+                        FileName = defaultName
+                    };
+
+                    if (saveFileDialog.ShowDialog() == true)
+                    {
+                        filePath = saveFileDialog.FileName;
+
+
+                        File.WriteAllText(filePath, parametersString);
+
+                        Console.WriteLine($"Arquivo salvo em: {filePath}");
+
+                        MessageBox.Show($"Measure configuration saved at {filePath}.");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Erro ao salvar o arquivo: {ex.Message}");
+                }
+            }
+            else MessageBox.Show("You must perform a measurement before saving its configuration.");
+        }
+
+        private void LoadMeasurementConfigs()
+        {
+            string documentsPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            string configFolderPath = System.IO.Path.Combine(documentsPath, "SMU");
+
+            if (!Directory.Exists(configFolderPath))
+            {
+                Directory.CreateDirectory(configFolderPath);
+            }
+
+            List<MeasurementConfig> configs = new List<MeasurementConfig>();
+
+            foreach (var file in Directory.GetFiles(configFolderPath, "*.txt"))
+            {
+                var info = new FileInfo(file);
+                configs.Add(new MeasurementConfig
+                {
+                    Name = System.IO.Path.GetFileNameWithoutExtension(file),
+                    Timestamp = info.LastWriteTime.ToString("dd/MM/yyyy HH:mm"),
+                    FilePath = file
+                });
+            }
+            HistoryList.ItemsSource = configs;
+        }
+        private void LoadMeasurement_Click(object sender, RoutedEventArgs e)
+        {
+            var selectedConfig = HistoryList.SelectedItem as MeasurementConfig;
+
+            if (selectedConfig != null)
+            {
+                string fileContent = File.ReadAllText(selectedConfig.FilePath);
+                Console.WriteLine(fileContent);
+                NewMeasure_Click(null, null);
+            }
+            else
+            {
+                MessageBox.Show("Please select a configuration first.", "No Selection");
+            }
+        }
+
+        private void DeleteMeasurement_Click(object sender, RoutedEventArgs e)
+        {
+            if (HistoryList.SelectedItem is MeasurementConfig selectedConfig)
+            {
+                if (File.Exists(selectedConfig.FilePath))
+                {
+                    var result = MessageBox.Show(
+                        $"Are you sure you want to delete '{selectedConfig.Name}'?",
+                        "Confirm Delete",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning);
+
+                    if (result == MessageBoxResult.Yes)
+                    {
+                        File.Delete(selectedConfig.FilePath);
+                        MessageBox.Show("File deleted successfully.", "Deleted", MessageBoxButton.OK, MessageBoxImage.Information);
+
+                        LoadMeasurementConfigs();
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("File not found.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            else
+            {
+                MessageBox.Show("Please select a file to delete.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void ExportGraph_Click(object sender, RoutedEventArgs e)
@@ -3104,4 +3197,11 @@ namespace Source_Measure_Unit
 
         }
     }
+}
+
+public class MeasurementConfig
+{
+    public string Name { get; set; }
+    public string Timestamp { get; set; }
+    public string FilePath { get; set; }
 }

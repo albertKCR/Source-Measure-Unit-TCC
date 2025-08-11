@@ -8,7 +8,9 @@
         xmlns:oxy="http://oxyplot.org/wpf"
         mc:Ignorable="d"
         WindowState="Maximized"
-        Title="Source Measure Unit" Height="600" Width="800">
+        Title="Source Measure Unit" Height="600" Width="800"
+        MinWidth="800"
+        MinHeight="600">
     <Grid x:Name="UserGrid">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -89,7 +91,7 @@
         <!-- Left Panel - Measurement History -->
         <StackPanel Grid.Row="2" Grid.Column="0" Background="{DynamicResource PanelBackgroundColor}" Margin="5">
             <TextBlock Text="Measurement History" FontWeight="Bold" Margin="5"/>
-            <ListView x:Name="HistoryList" Background="{DynamicResource BackgroundColor}" Foreground="{DynamicResource ForegroundColor}" Height="100" Width="170">
+            <ListView x:Name="HistoryList" Background="{DynamicResource BackgroundColor}" Foreground="{DynamicResource ForegroundColor}" Height="188" Width="170">
                 <ListView.ItemTemplate>
                     <DataTemplate>
                         <StackPanel>
