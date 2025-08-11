@@ -47,6 +47,15 @@
         <ToolBar ToolBarTray.IsLocked="True" Grid.Row="1" Grid.ColumnSpan="2" Foreground="White" Background="White">
             <ToolBar Band="1" BandIndex="1" Foreground="White">
                 
+                <!-- Home -->
+                <Button Click="Home_Click" ToolTip="New Measure">
+                    <StackPanel Orientation="Horizontal">
+                        <Image Source="/Icons/home.png" Width="32" Height="32"/>
+                        <TextBlock Text="Home" FontSize="22" Margin="5,0,0,0"/>
+                    </StackPanel>
+                </Button>
+                <Separator/>
+
                 <!-- New Measure -->
                 <Button Click="NewMeasure_Click" ToolTip="New Measure">
                     <StackPanel Orientation="Horizontal">
@@ -54,6 +63,7 @@
                         <TextBlock Text="New Measure" FontSize="22" Margin="5,0,0,0"/>
                     </StackPanel>
                 </Button>
+                <Separator/>
 
 
                 <!-- Save Measurement -->
@@ -63,6 +73,7 @@
                         <TextBlock Text="Save Measurement" FontSize="22" Margin="5,0,0,0"/>
                     </StackPanel>
                 </Button>
+                <Separator/>
 
                 <!-- Create Technique -->
                 <Button Click="CreateTechnique_Click" ToolTip="Create Technique">
@@ -71,6 +82,7 @@
                         <TextBlock Text="Create Technique" FontSize="22" Margin="0,0,0,0"/>
                     </StackPanel>
                 </Button>
+                
             </ToolBar>
         </ToolBar>
 
