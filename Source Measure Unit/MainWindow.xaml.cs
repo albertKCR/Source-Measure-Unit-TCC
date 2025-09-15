@@ -20,6 +20,8 @@ using OxyPlot.Series;
 using System.IO.Ports;
 using System.IO;
 using Microsoft.Win32;
+using ControlzEx.Standard;
+using System.Windows.Markup;
 
 namespace Source_Measure_Unit
 {
@@ -34,6 +36,15 @@ namespace Source_Measure_Unit
 
         private String selectedSerialPort;
         private SerialPort _serialPort;
+
+        PlotModel plotModel;
+        PlotModel plotModel2;
+        LineSeries series;
+        LineSeries series2;
+        LinearAxis plot1X;
+        LinearAxis plot1Y;
+        LinearAxis plot2X;
+        LinearAxis plot2Y;
 
         private TabControl NewMeasureTab;
         private TabItem MeasureConfig;
@@ -524,6 +535,26 @@ namespace Source_Measure_Unit
                 CanVerticallyScroll = true,
             };
 
+            StackPanel Plot1Panel = new StackPanel
+            {
+                CanHorizontallyScroll = true,
+                CanVerticallyScroll = true,
+            };
+
+            Plot1Panel.Orientation = Orientation.Vertical;
+            Plot1Panel.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+            Plot1Panel.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+
+            StackPanel Plot2Panel = new StackPanel
+            {
+                CanHorizontallyScroll = true,
+                CanVerticallyScroll = true,
+            };
+
+            Plot2Panel.Orientation = Orientation.Vertical;
+            Plot2Panel.VerticalAlignment = System.Windows.VerticalAlignment.Top;
+            Plot2Panel.HorizontalAlignment = System.Windows.HorizontalAlignment.Center;
+
             ScrollViewer scrollViewer = new ScrollViewer
             {
                 VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
@@ -547,20 +578,25 @@ namespace Source_Measure_Unit
             };
 
             // Creating a plot model
-            var plotModel = new PlotModel { Title = "Channel 1" };
-            var plotModel2 = new PlotModel { Title = "Channel 2" };
+            plotModel = new PlotModel { Title = "Channel 1" };
+            plotModel2 = new PlotModel { Title = "Channel 2" };
 
             // Axes x and y
-            plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Voltage (V)" });
-            plotModel.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Current (mA)" });
-            plotModel2.Axes.Add(new LinearAxis { Position = AxisPosition.Bottom, Title = "Voltage (V)" });
-            plotModel2.Axes.Add(new LinearAxis { Position = AxisPosition.Left, Title = "Current (mA)" });
+            plot1X = new LinearAxis { Position = AxisPosition.Bottom, Title = "" };
+            plot1Y = new LinearAxis { Position = AxisPosition.Left, Title = "" };
+            plot2X = new LinearAxis { Position = AxisPosition.Bottom, Title = "" };
+            plot2Y = new LinearAxis { Position = AxisPosition.Left, Title = "" };
 
-            LineSeries series = new LineSeries
+            plotModel.Axes.Add(plot1X);
+            plotModel.Axes.Add(plot1Y);
+            plotModel2.Axes.Add(plot2X);
+            plotModel2.Axes.Add(plot2Y);
+
+            series = new LineSeries
             {
                 StrokeThickness = 2
             };
-            LineSeries series2 = new LineSeries
+            series2 = new LineSeries
             {
                 StrokeThickness = 2
             };
@@ -578,8 +614,64 @@ namespace Source_Measure_Unit
             GraphSMUChannel1.Model = plotModel;
             GraphSMUChannel2.Model = plotModel2;
 
-            RealTimeGraphPanel.Children.Add(GraphSMUChannel1);
-            RealTimeGraphPanel.Children.Add(GraphSMUChannel2);
+            Button savePNG1 = new Button
+            {
+                Content = "Save plot 1 as PNG",
+                Width = 150,
+                FontSize = 15,
+                FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+            };
+            savePNG1.IsEnabled = true;
+
+            Button savePNG2 = new Button
+            {
+                Content = "Save plot 2 as PNG",
+                Width = 150,
+                FontSize = 15,
+                FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+            };
+            savePNG1.IsEnabled = true;
+
+            Button saveCSV1 = new Button
+            {
+                Content = "Save plot 1 as CSV",
+                Width = 150,
+                FontSize = 15,
+                Margin = new Thickness(25),
+                FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+            };
+            savePNG1.IsEnabled = true;
+
+            Button saveCSV2 = new Button
+            {
+                Content = "Save plot 2 as CSV",
+                Width = 150,
+                FontSize = 15,
+                Margin = new Thickness(25),
+                FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
+                HorizontalAlignment = System.Windows.HorizontalAlignment.Center
+            };
+            savePNG1.IsEnabled = true;
+
+
+            Plot1Panel.Children.Add(GraphSMUChannel1);
+            Plot1Panel.Children.Add(savePNG1);
+            Plot1Panel.Children.Add(saveCSV1);
+            savePNG1.Click += SaveGraphAsImage_Click;
+
+            RealTimeGraphPanel.Children.Add(Plot1Panel);
+
+
+            Plot2Panel.Children.Add(GraphSMUChannel2);
+            Plot2Panel.Children.Add(savePNG2);
+            Plot2Panel.Children.Add(saveCSV2);
+            savePNG2.Click += SaveGraphAsImage2_Click;
+
+            RealTimeGraphPanel.Children.Add(Plot2Panel);
+
 
             scrollViewer.Content = RealTimeGraphPanel;
             RealTimeGraph.Content = scrollViewer;
@@ -592,6 +684,7 @@ namespace Source_Measure_Unit
             parametersString = "";
             if (channel1Check.IsChecked == true && comboBoxCh1.SelectedItem != null) 
             {
+                NewMeasureTab.SelectedIndex = 1;
                 switch (comboBoxCh1.SelectedItem.ToString())
                 {
                     case "Linear Sweep Voltammetry":
@@ -606,6 +699,7 @@ namespace Source_Measure_Unit
                         else
                         {
                             parametersString = "LSV" + ";" + LSVstartVBox.Text + ";" + LSVfinalVBox.Text + ";" + LSVstepVBox.Text + ";" + LSVtimeStepBox.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("LSV Channel 1 Parameters Sent");
                         }
                         break;
@@ -625,6 +719,7 @@ namespace Source_Measure_Unit
                         else
                         {
                             parametersString = "CV" + ";" + CVstartVBox.Text + ";" + CVpeakV1Box.Text + ";" + CVpeakV2Box.Text + ";" + CVfinalVBox.Text + ";" + CVstepVBox.Text + ";" + CVtimeStepBox.Text + ";" + CVcycleBox.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("CV Channel 1 Parameters Sent");
                         }
                         break;
@@ -643,6 +738,7 @@ namespace Source_Measure_Unit
                         else
                         {
                             parametersString = "DPV" + ";" + DPVstartVBox.Text + ";" + DPVfinalVBox.Text + ";" + DPVstepVBox.Text + ";" + DPVpulseBox.Text + ";" + DPVpulseTimeBox.Text + ";" + DPVbaseTimeBox.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("DPV Channel 1 Parameters Sent");
                         }
                         break;
@@ -660,6 +756,7 @@ namespace Source_Measure_Unit
                         else
                         {
                             parametersString = "SWV" + ";" + SWVstartVBox.Text + ";" + SWVfinalVBox.Text + ";" + SWVstepVBox.Text + ";" + SWVAmpBox.Text + ";" + SWVtimeStepBox.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("SWV Channel 1 Parameters Sent");
                         }
                         break;
@@ -675,6 +772,7 @@ namespace Source_Measure_Unit
                         else
                         {
                             parametersString = "CP" + ";" + CPcurrentBox.Text + ";" + CPsampleTBox.Text + ";" + CPsamplePBox.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("CP Channel 1 Parameters Sent");
                         }
                         break;
@@ -691,6 +789,7 @@ namespace Source_Measure_Unit
                         else
                         {
                             parametersString = "LSP" + ";" + LSPstartIBox.Text + ";" + LSPfinalIBox.Text + ";" + LSPstepIBox.Text + ";" + LSPtimeStepBox.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("LSP Channel 1 Parameters Sent");
                         }
                         break;
@@ -710,6 +809,7 @@ namespace Source_Measure_Unit
                         else
                         {
                             parametersString = "CyP" + ";" + CyPstartIBox.Text + ";" + CyPpeakI1Box.Text + ";" + CyPpeakI2Box.Text + ";" + CyPfinalIBox.Text + ";" + CyPstepIBox.Text + ";" + CyPtimeStepBox.Text + ";" + CyPcycleBox.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("CyP Channel 1 Parameters Sent");
                         }
                         break;
@@ -717,8 +817,8 @@ namespace Source_Measure_Unit
                         MessageBox.Show("Please select a valid technique for Channel 1.");
                         break;
                 }
-                parametersString += ",";
             }
+            parametersString += ",";
             if (channel2Check.IsChecked == true && comboBoxCh2.SelectedItem != null)
             {
                 switch (comboBoxCh2.SelectedItem.ToString())
@@ -735,6 +835,7 @@ namespace Source_Measure_Unit
                         else
                         {
                             parametersString += "2" + "LSV" + ";" + LSVstartVBox2.Text + ";" + LSVfinalVBox2.Text + ";" + LSVstepVBox2.Text + ";" + LSVtimeStepBox2.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("LSV Channel 2 Parameters Sent");
                         }
                         break;
@@ -752,8 +853,9 @@ namespace Source_Measure_Unit
                             break;
                         }
                         else { 
-                        parametersString += "2" + "CV" + ";" + CVstartVBox2.Text + ";" + CVpeakV1Box2.Text + ";" + CVpeakV2Box2.Text + ";" + CVfinalVBox2.Text + ";" + CVstepVBox2.Text + ";" + CVtimeStepBox2.Text + ";" + CVcycleBox2.Text;
-                        Console.WriteLine("CV Channel 2 Parameters Sent");
+                            parametersString += "2" + "CV" + ";" + CVstartVBox2.Text + ";" + CVpeakV1Box2.Text + ";" + CVpeakV2Box2.Text + ";" + CVfinalVBox2.Text + ";" + CVstepVBox2.Text + ";" + CVtimeStepBox2.Text + ";" + CVcycleBox2.Text;
+                            _serialPort.Write(parametersString);
+                            Console.WriteLine("CV Channel 2 Parameters Sent");
                         }
                         break;
 
@@ -771,6 +873,7 @@ namespace Source_Measure_Unit
                         else
                         {
                             parametersString += "2" + "DPV" + ";" + DPVstartVBox2.Text + ";" + DPVfinalVBox2.Text + ";" + DPVstepVBox2.Text + ";" + DPVpulseBox2.Text + ";" + DPVpulseTimeBox2.Text + ";" + DPVbaseTimeBox2.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("DPV Channel 2 Parameters Sent");
                         }
                         
@@ -789,6 +892,7 @@ namespace Source_Measure_Unit
                         else 
                         {
                             parametersString += "2" + "SWV" + ";" + SWVstartVBox2.Text + ";" + SWVfinalVBox2.Text + ";" + SWVstepVBox2.Text + ";" + SWVAmpBox2.Text + ";" + SWVtimeStepBox2.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("SWV Channel 2 Parameters Sent");
                         }
                         
@@ -805,6 +909,7 @@ namespace Source_Measure_Unit
                         else 
                         {
                             parametersString += "2" + "CP" + ";" + CPcurrentBox2.Text + ";" + CPsampleTBox2.Text + ";" + CPsamplePBox2.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("CP Channel 2 Parameters Sent");
                         }
                         
@@ -822,6 +927,7 @@ namespace Source_Measure_Unit
                         else 
                         {
                             parametersString += "2" + "LSP" + ";" + LSPstartIBox2.Text + ";" + LSPfinalIBox2.Text + ";" + LSPstepIBox2.Text + ";" + LSPtimeStepBox2.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("LSP Channel 2 Parameters Sent");
                         }
                         
@@ -842,6 +948,7 @@ namespace Source_Measure_Unit
                         else
                         {
                             parametersString += "2" + "CyP" + ";" + CyPstartIBox2.Text + ";" + CyPpeakI1Box2.Text + ";" + CyPpeakI2Box2.Text + ";" + CyPfinalIBox2.Text + ";" + CyPstepIBox2.Text + ";" + CyPtimeStepBox2.Text + ";" + CyPcycleBox2.Text;
+                            _serialPort.Write(parametersString);
                             Console.WriteLine("CyP Channel 2 Parameters Sent");
                         }
                         
@@ -1124,7 +1231,7 @@ namespace Source_Measure_Unit
         {
             try
             {
-                _serialPort = new SerialPort(selectedSerialPort, 9600);
+                _serialPort = new SerialPort(selectedSerialPort, 115200);
                 _serialPort.DataReceived += SerialPort_DataReceived;
                 _serialPort.Open();
                 _serialPort.DiscardInBuffer();
@@ -1141,12 +1248,86 @@ namespace Source_Measure_Unit
             try
             {
                 string data = _serialPort.ReadExisting();
+
+                string[] parts = data.Split(';');
+
+                if (parts.Length == 4) PlotDualChannel(parts);
+                else if (parts.Length == 3) PlotSingleChannel(parts);
+
                 Console.WriteLine(data);
             }
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        private void PlotSingleChannel(string[] parts)
+        {
+            string technique = parts[0];
+
+            double value1 = double.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture);
+            double value2 = double.Parse(parts[2], System.Globalization.CultureInfo.InvariantCulture);
+
+            if (technique.Equals("p"))
+            {
+                plot1X.Title = "Voltage (V)";
+                plot1Y.Title = "Current (mA)";
+                series.Points.Add(new DataPoint(value1, value2*1000));
+                plotModel.InvalidatePlot(true);
+            }
+            else if (technique == "g")
+            {
+                plot1X.Title = "Current (mA)";
+                plot1Y.Title = "Voltage (V)";
+                series.Points.Add(new DataPoint(value1*1000, value2));
+                plotModel.InvalidatePlot(true);
+            }
+        }
+
+        private void PlotDualChannel(string[] parts)
+        {
+            string channel = parts[0];
+
+            string technique = parts[1];
+
+            double value1 = double.Parse(parts[3], System.Globalization.CultureInfo.InvariantCulture);
+            double value2 = double.Parse(parts[4], System.Globalization.CultureInfo.InvariantCulture);
+
+            if (channel == "ch1")
+            {
+                if (technique == "p")
+                {
+                    plot1X.Title = "Voltage (V)";
+                    plot1Y.Title = "Current (mA)";
+                    series.Points.Add(new DataPoint(value1, value2));
+                    plotModel.InvalidatePlot(true);
+                }
+                else if (technique == "g")
+                {
+                    plot1X.Title = "Current (mA)";
+                    plot1Y.Title = "Voltage (V)";
+                    series.Points.Add(new DataPoint(value1, value2));
+                    plotModel.InvalidatePlot(true);
+                }
+            }
+            else if (channel == "ch2") 
+            {
+                if (technique == "p")
+                {
+                    plot1X.Title = "Voltage (V)";
+                    plot1Y.Title = "Current (mA)";
+                    series2.Points.Add(new DataPoint(value1, value2));
+                    plotModel2.InvalidatePlot(true);
+                }
+                else if (technique == "g")
+                {
+                    plot1X.Title = "Current (mA)";
+                    plot1Y.Title = "Voltage (V)";
+                    series2.Points.Add(new DataPoint(value1, value2));
+                    plotModel2.InvalidatePlot(true);
+                }
+            }            
         }
 
         private void CreateTechnique_Click(object sender, RoutedEventArgs e)
@@ -1288,7 +1469,6 @@ namespace Source_Measure_Unit
                 MessageBox.Show("Please select a configuration first.", "No Selection");
             }
         }
-
         private void ReadMeasurementConfig(string fileContent)
         {
 
@@ -1448,8 +1628,6 @@ namespace Source_Measure_Unit
                 }
             }
         }
-
-
         private void DeleteMeasurement_Click(object sender, RoutedEventArgs e)
         {
             if (HistoryList.SelectedItem is MeasurementConfig selectedConfig)
@@ -1480,11 +1658,61 @@ namespace Source_Measure_Unit
                 MessageBox.Show("Please select a file to delete.", "No Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
         }
-
         private void ExportGraph_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("Export Graph Clicked");
         }
+        
+        #region Save as image
+        private void SaveGraphAsImage_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Title = "Save Chart as PNG",
+                Filter = "PNG Files (*.png)|*.png",
+                DefaultExt = "png",
+                FileName = "image.png"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                string filePath = saveFileDialog.FileName;
+                ExportToPng(filePath);
+            }
+        }
+
+        private void ExportToPng(string filePath)
+        {
+            plotModel.Background = OxyColors.White;
+            var pngExporter = new PngExporter { Width = 1280, Height = 960 };
+            pngExporter.ExportToFile(plotModel, filePath);
+            MessageBox.Show("Chart successfully saved as an image in: " + filePath);
+        }
+        private void SaveGraphAsImage2_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Title = "Save Chart as PNG",
+                Filter = "PNG Files (*.png)|*.png",
+                DefaultExt = "png",
+                FileName = "image.png"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                string filePath = saveFileDialog.FileName;
+                ExportToPng2(filePath);
+            }
+        }
+
+        private void ExportToPng2(string filePath)
+        {
+            plotModel2.Background = OxyColors.White;
+            var pngExporter = new PngExporter { Width = 1280, Height = 960 };
+            pngExporter.ExportToFile(plotModel2, filePath);
+            MessageBox.Show("Chart successfully saved as an image in: " + filePath);
+        }
+        #endregion
         private void LSV_CreateConfigPanelItemsCh1()
         {
             Ch1ParametersLabelPanel = new StackPanel()
