@@ -32,6 +32,9 @@ namespace Source_Measure_Unit
     {
         private bool _isDarkMode = false;
 
+        private List<Tuple<double, double>> dataPoints = new List<Tuple<double, double>>();
+        private List<Tuple<double, double>> dataPoints2 = new List<Tuple<double, double>>();
+
         private String parametersString = "";
 
         private String selectedSerialPort;
@@ -199,8 +202,6 @@ namespace Source_Measure_Unit
         private TabControl HomeTabControl;
         private TabItem StartTab;
 
-        private TabControl CreateTechnique;
-        private TabItem TechniqueEditor;
         public MainWindow()
         {
             InitializeComponent();
@@ -576,9 +577,9 @@ namespace Source_Measure_Unit
                 Height = 500,
                 Width = 600
             };
-
+            
             // Creating a plot model
-            plotModel = new PlotModel { Title = "Channel 1" };
+            plotModel = new PlotModel { Title = "Channel 1/Single Channel" };
             plotModel2 = new PlotModel { Title = "Channel 2" };
 
             // Axes x and y
@@ -594,11 +595,15 @@ namespace Source_Measure_Unit
 
             series = new LineSeries
             {
-                StrokeThickness = 2
+                StrokeThickness = 2,
+                MarkerType = MarkerType.Circle,
+                Color = OxyColors.RoyalBlue
             };
             series2 = new LineSeries
             {
-                StrokeThickness = 2
+                StrokeThickness = 2,
+                MarkerType = MarkerType.Circle,
+                Color = OxyColors.RoyalBlue
             };
 
             /*series.Points.Add(new DataPoint(0, 0));
@@ -661,6 +666,7 @@ namespace Source_Measure_Unit
             Plot1Panel.Children.Add(savePNG1);
             Plot1Panel.Children.Add(saveCSV1);
             savePNG1.Click += SaveGraphAsImage_Click;
+            saveCSV1.Click += SaveDataAsCsv_Click;
 
             RealTimeGraphPanel.Children.Add(Plot1Panel);
 
@@ -669,6 +675,7 @@ namespace Source_Measure_Unit
             Plot2Panel.Children.Add(savePNG2);
             Plot2Panel.Children.Add(saveCSV2);
             savePNG2.Click += SaveGraphAsImage2_Click;
+            saveCSV2.Click += SaveDataAsCsv_Click2;
 
             RealTimeGraphPanel.Children.Add(Plot2Panel);
 
@@ -685,6 +692,7 @@ namespace Source_Measure_Unit
             if (channel1Check.IsChecked == true && comboBoxCh1.SelectedItem != null) 
             {
                 NewMeasureTab.SelectedIndex = 1;
+                ClearGraph();
                 switch (comboBoxCh1.SelectedItem.ToString())
                 {
                     case "Linear Sweep Voltammetry":
@@ -821,6 +829,8 @@ namespace Source_Measure_Unit
             parametersString += ",";
             if (channel2Check.IsChecked == true && comboBoxCh2.SelectedItem != null)
             {
+                NewMeasureTab.SelectedIndex = 1;
+                ClearGraph();
                 switch (comboBoxCh2.SelectedItem.ToString())
                 {
                     case "Linear Sweep Voltammetry":
@@ -1273,6 +1283,8 @@ namespace Source_Measure_Unit
             {
                 plot1X.Title = "Voltage (V)";
                 plot1Y.Title = "Current (mA)";
+                dataPoints.Add(new Tuple<double, double>(value1, value2));
+
                 series.Points.Add(new DataPoint(value1, value2*1000));
                 plotModel.InvalidatePlot(true);
             }
@@ -1280,6 +1292,8 @@ namespace Source_Measure_Unit
             {
                 plot1X.Title = "Current (mA)";
                 plot1Y.Title = "Voltage (V)";
+                dataPoints.Add(new Tuple<double, double>(value1, value2));
+
                 series.Points.Add(new DataPoint(value1*1000, value2));
                 plotModel.InvalidatePlot(true);
             }
@@ -1300,6 +1314,7 @@ namespace Source_Measure_Unit
                 {
                     plot1X.Title = "Voltage (V)";
                     plot1Y.Title = "Current (mA)";
+                    dataPoints.Add(new Tuple<double, double>(value1, value2));
                     series.Points.Add(new DataPoint(value1, value2));
                     plotModel.InvalidatePlot(true);
                 }
@@ -1307,6 +1322,7 @@ namespace Source_Measure_Unit
                 {
                     plot1X.Title = "Current (mA)";
                     plot1Y.Title = "Voltage (V)";
+                    dataPoints.Add(new Tuple<double, double>(value1, value2));
                     series.Points.Add(new DataPoint(value1, value2));
                     plotModel.InvalidatePlot(true);
                 }
@@ -1317,6 +1333,7 @@ namespace Source_Measure_Unit
                 {
                     plot1X.Title = "Voltage (V)";
                     plot1Y.Title = "Current (mA)";
+                    dataPoints2.Add(new Tuple<double, double>(value1, value2));
                     series2.Points.Add(new DataPoint(value1, value2));
                     plotModel2.InvalidatePlot(true);
                 }
@@ -1324,30 +1341,53 @@ namespace Source_Measure_Unit
                 {
                     plot1X.Title = "Current (mA)";
                     plot1Y.Title = "Voltage (V)";
+                    dataPoints2.Add(new Tuple<double, double>(value1, value2));
                     series2.Points.Add(new DataPoint(value1, value2));
                     plotModel2.InvalidatePlot(true);
                 }
             }            
         }
 
-        private void CreateTechnique_Click(object sender, RoutedEventArgs e)
+        private void StopMeasure_Click(object sender, RoutedEventArgs e) 
         {
-            ClearEveryTabControl();
-            CreateTechnique = new TabControl
+            if (_serialPort != null)
             {
-                    Margin = new Thickness(5)
-            };
-            Grid.SetRow(CreateTechnique, 2);
-            Grid.SetColumn(CreateTechnique, 1);
-            UserGrid.Children.Add(CreateTechnique);
-
-            TechniqueEditor = new TabItem
-            {
-                Header = "Custom Technique Editor"
-            };
-            CreateTechnique.Items.Add(TechniqueEditor);
+                _serialPort.Write("stopMeasure");
+                MessageBox.Show("Measure aborted.");
+            }
         }
 
+        private void ClearGraph()
+        {
+            dataPoints.Clear();
+            dataPoints2.Clear();
+
+            Dispatcher.Invoke(() => plotModel.Series.Clear());
+            Dispatcher.Invoke(() => plotModel2.Series.Clear());
+
+            plotModel.InvalidatePlot(true);
+            plotModel2.InvalidatePlot(true);
+            series = null;
+            series2 = null;
+
+            series = new LineSeries
+            {
+                StrokeThickness = 2,
+                MarkerType = MarkerType.Circle,
+                Color = OxyColors.RoyalBlue
+            };
+            series2 = new LineSeries
+            {
+                StrokeThickness = 2,
+                MarkerType = MarkerType.Circle,
+                Color = OxyColors.RoyalBlue
+            };
+
+            plotModel.Series.Add(series);
+            plotModel2.Series.Add(series2);
+            GraphSMUChannel1.Model = plotModel;
+            GraphSMUChannel2.Model = plotModel2;
+        }
         private void Home_Click(object sender, RoutedEventArgs e)
         {
             ClearEveryTabControl();
@@ -1367,7 +1407,6 @@ namespace Source_Measure_Unit
         }
         private void ClearEveryTabControl()
         {
-            UserGrid.Children.Remove(CreateTechnique);
             UserGrid.Children.Remove(NewMeasureTab);
         }
         private void SaveMeasurement_Click(object sender, RoutedEventArgs e)
@@ -1711,6 +1750,67 @@ namespace Source_Measure_Unit
             var pngExporter = new PngExporter { Width = 1280, Height = 960 };
             pngExporter.ExportToFile(plotModel2, filePath);
             MessageBox.Show("Chart successfully saved as an image in: " + filePath);
+        }
+        #endregion
+        #region Save as csv
+        private void SaveDataAsCsv_Click(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Title = "Save data as CSV",
+                Filter = "CSV Files (*.csv)|*.csv",
+                DefaultExt = "csv",
+                FileName = "data.csv"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                SaveToCsv(saveFileDialog.FileName);
+                MessageBox.Show("Data successfully saved to: " + saveFileDialog.FileName);
+            }
+        }
+
+        private void SaveToCsv(string filePath)
+        {
+            using (var writer = new StreamWriter(filePath))
+            {
+                //writer.WriteLine(measureData);
+
+                foreach (var point in dataPoints)
+                {
+                    writer.WriteLine($"{point.Item1},{point.Item2}");
+                }
+            }
+        }
+
+        private void SaveDataAsCsv_Click2(object sender, RoutedEventArgs e)
+        {
+            var saveFileDialog = new SaveFileDialog
+            {
+                Title = "Save data as CSV",
+                Filter = "CSV Files (*.csv)|*.csv",
+                DefaultExt = "csv",
+                FileName = "data.csv"
+            };
+
+            if (saveFileDialog.ShowDialog() == true)
+            {
+                SaveToCsv2(saveFileDialog.FileName);
+                MessageBox.Show("Data successfully saved to: " + saveFileDialog.FileName);
+            }
+        }
+
+        private void SaveToCsv2(string filePath)
+        {
+            using (var writer = new StreamWriter(filePath))
+            {
+                //writer.WriteLine(measureData);
+
+                foreach (var point in dataPoints2)
+                {
+                    writer.WriteLine($"{point.Item1},{point.Item2}");
+                }
+            }
         }
         #endregion
         private void LSV_CreateConfigPanelItemsCh1()

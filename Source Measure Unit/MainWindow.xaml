@@ -71,20 +71,20 @@
                 <!-- Save Measurement -->
                 <Button Click="SaveMeasurement_Click" ToolTip="Save Measurement">
                     <StackPanel Orientation="Horizontal">
-                        <Image Source="/Icons/save.png" Width="32" Height="32"/>
-                        <TextBlock Text="Save Measurement" FontSize="22" Margin="5,0,0,0"/>
+                        <Image Source="/Icons/save.png" Width="28" Height="28"/>
+                        <TextBlock Text="Save Parameters" FontSize="22" Margin="5,0,0,0"/>
                     </StackPanel>
                 </Button>
                 <Separator/>
 
                 <!-- Create Technique -->
-                <Button Click="CreateTechnique_Click" ToolTip="Create Technique">
+                <Button Click="StopMeasure_Click" ToolTip="Stop Measure">
                     <StackPanel Orientation="Horizontal">
                         <Image Source="/Icons/Create.png" Width="32" Height="32"/>
-                        <TextBlock Text="Create Technique" FontSize="22" Margin="0,0,0,0"/>
+                        <TextBlock Text="Stop Measure" FontSize="22" Margin="0,0,0,0"/>
                     </StackPanel>
                 </Button>
-                
+
             </ToolBar>
         </ToolBar>
 
