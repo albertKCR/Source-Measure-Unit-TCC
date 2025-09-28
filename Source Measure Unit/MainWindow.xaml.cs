@@ -1259,12 +1259,13 @@ namespace Source_Measure_Unit
             {
                 string data = _serialPort.ReadExisting();
 
+                Console.WriteLine(data);
+                data = data.Trim();
+
                 string[] parts = data.Split(';');
 
                 if (parts.Length == 4) PlotDualChannel(parts);
-                else if (parts.Length == 3) PlotSingleChannel(parts);
-
-                Console.WriteLine(data);
+                else if (parts.Length == 3) PlotSingleChannel(parts);                
             }
             catch (Exception ex)
             {
@@ -1276,8 +1277,8 @@ namespace Source_Measure_Unit
         {
             string technique = parts[0];
 
-            double value1 = double.Parse(parts[1], System.Globalization.CultureInfo.InvariantCulture);
-            double value2 = double.Parse(parts[2], System.Globalization.CultureInfo.InvariantCulture);
+            double value1 = double.Parse(parts[1]);
+            double value2 = double.Parse(parts[2]);
 
             if (technique.Equals("p"))
             {
@@ -1285,7 +1286,7 @@ namespace Source_Measure_Unit
                 plot1Y.Title = "Current (mA)";
                 dataPoints.Add(new Tuple<double, double>(value1, value2));
 
-                series.Points.Add(new DataPoint(value1, value2*1000));
+                series.Points.Add(new DataPoint(value1, value2));
                 plotModel.InvalidatePlot(true);
             }
             else if (technique == "g")
@@ -1294,7 +1295,7 @@ namespace Source_Measure_Unit
                 plot1Y.Title = "Voltage (V)";
                 dataPoints.Add(new Tuple<double, double>(value1, value2));
 
-                series.Points.Add(new DataPoint(value1*1000, value2));
+                series.Points.Add(new DataPoint(value1, value2));
                 plotModel.InvalidatePlot(true);
             }
         }
@@ -1305,8 +1306,8 @@ namespace Source_Measure_Unit
 
             string technique = parts[1];
 
-            double value1 = double.Parse(parts[3], System.Globalization.CultureInfo.InvariantCulture);
-            double value2 = double.Parse(parts[4], System.Globalization.CultureInfo.InvariantCulture);
+            double value1 = double.Parse(parts[2], System.Globalization.CultureInfo.InvariantCulture);
+            double value2 = double.Parse(parts[3], System.Globalization.CultureInfo.InvariantCulture);
 
             if (channel == "ch1")
             {
@@ -1331,16 +1332,16 @@ namespace Source_Measure_Unit
             {
                 if (technique == "p")
                 {
-                    plot1X.Title = "Voltage (V)";
-                    plot1Y.Title = "Current (mA)";
+                    plot2X.Title = "Voltage (V)";
+                    plot2Y.Title = "Current (mA)";
                     dataPoints2.Add(new Tuple<double, double>(value1, value2));
                     series2.Points.Add(new DataPoint(value1, value2));
                     plotModel2.InvalidatePlot(true);
                 }
                 else if (technique == "g")
                 {
-                    plot1X.Title = "Current (mA)";
-                    plot1Y.Title = "Voltage (V)";
+                    plot2X.Title = "Current (mA)";
+                    plot2Y.Title = "Voltage (V)";
                     dataPoints2.Add(new Tuple<double, double>(value1, value2));
                     series2.Points.Add(new DataPoint(value1, value2));
                     plotModel2.InvalidatePlot(true);
@@ -1725,7 +1726,7 @@ namespace Source_Measure_Unit
             plotModel.Background = OxyColors.White;
             var pngExporter = new PngExporter { Width = 1280, Height = 960 };
             pngExporter.ExportToFile(plotModel, filePath);
-            MessageBox.Show("Chart successfully saved as an image in: " + filePath);
+            //MessageBox.Show("Chart successfully saved as an image in: " + filePath);
         }
         private void SaveGraphAsImage2_Click(object sender, RoutedEventArgs e)
         {
@@ -1749,7 +1750,7 @@ namespace Source_Measure_Unit
             plotModel2.Background = OxyColors.White;
             var pngExporter = new PngExporter { Width = 1280, Height = 960 };
             pngExporter.ExportToFile(plotModel2, filePath);
-            MessageBox.Show("Chart successfully saved as an image in: " + filePath);
+            //MessageBox.Show("Chart successfully saved as an image in: " + filePath);
         }
         #endregion
         #region Save as csv
@@ -1766,7 +1767,7 @@ namespace Source_Measure_Unit
             if (saveFileDialog.ShowDialog() == true)
             {
                 SaveToCsv(saveFileDialog.FileName);
-                MessageBox.Show("Data successfully saved to: " + saveFileDialog.FileName);
+                //MessageBox.Show("Data successfully saved to: " + saveFileDialog.FileName);
             }
         }
 
@@ -1796,7 +1797,7 @@ namespace Source_Measure_Unit
             if (saveFileDialog.ShowDialog() == true)
             {
                 SaveToCsv2(saveFileDialog.FileName);
-                MessageBox.Show("Data successfully saved to: " + saveFileDialog.FileName);
+                //MessageBox.Show("Data successfully saved to: " + saveFileDialog.FileName);
             }
         }
 
@@ -3172,7 +3173,7 @@ namespace Source_Measure_Unit
             #region Step Current
             LSPstepILabel = new Label
             {
-                Content = "Step size (mA):",
+                Content = "Step size (μA):",
                 FontSize = 17,
                 FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
                 VerticalAlignment = System.Windows.VerticalAlignment.Center,
@@ -3192,7 +3193,7 @@ namespace Source_Measure_Unit
             #region Time Step
             LSPtimeStepLabel = new Label
             {
-                Content = "Scan rate (mA/s)",
+                Content = "Scan rate (μA/s)",
                 FontSize = 17,
                 FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
                 VerticalAlignment = System.Windows.VerticalAlignment.Center,
@@ -3275,7 +3276,7 @@ namespace Source_Measure_Unit
             #region Step Current
             LSPstepILabel = new Label
             {
-                Content = "Step size (mA):",
+                Content = "Step size (μA):",
                 FontSize = 17,
                 FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
                 VerticalAlignment = System.Windows.VerticalAlignment.Center,
@@ -3295,7 +3296,7 @@ namespace Source_Measure_Unit
             #region Time Step
             LSPtimeStepLabel = new Label
             {
-                Content = "Scan rate (mA/s)",
+                Content = "Scan rate (μA/s)",
                 FontSize = 17,
                 FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
                 VerticalAlignment = System.Windows.VerticalAlignment.Center,
@@ -3421,7 +3422,7 @@ namespace Source_Measure_Unit
             #region Step Current
             CyPstepILabel = new Label
             {
-                Content = "Step size (mA):",
+                Content = "Step size (μA):",
                 FontSize = 17,
                 FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
                 VerticalAlignment = System.Windows.VerticalAlignment.Center,
@@ -3442,7 +3443,7 @@ namespace Source_Measure_Unit
             #region Time Step
             CyPtimeStepLabel = new Label
             {
-                Content = "Scan rate (mV/s):",
+                Content = "Scan rate (μA/s):",
                 FontSize = 17,
                 FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
                 VerticalAlignment = System.Windows.VerticalAlignment.Center,
@@ -3591,7 +3592,7 @@ namespace Source_Measure_Unit
             #region Step Current
             CyPstepILabel = new Label
             {
-                Content = "Step size (mA):",
+                Content = "Step size (μA):",
                 FontSize = 17,
                 FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
                 VerticalAlignment = System.Windows.VerticalAlignment.Center,
@@ -3612,7 +3613,7 @@ namespace Source_Measure_Unit
             #region Time Step
             CyPtimeStepLabel = new Label
             {
-                Content = "Scan rate (mV/s):",
+                Content = "Scan rate (μA/s):",
                 FontSize = 17,
                 FontFamily = new System.Windows.Media.FontFamily("Segoe UI"),
                 VerticalAlignment = System.Windows.VerticalAlignment.Center,
