@@ -1283,7 +1283,7 @@ namespace Source_Measure_Unit
             if (technique.Equals("p"))
             {
                 plot1X.Title = "Voltage (V)";
-                plot1Y.Title = "Current (mA)";
+                plot1Y.Title = "Current (A)";
                 dataPoints.Add(new Tuple<double, double>(value1, value2));
 
                 series.Points.Add(new DataPoint(value1, value2));
